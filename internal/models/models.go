@@ -41,13 +41,15 @@ func (s SurveyItem) Responses() [5]string {
 }
 
 type Contestant struct {
-	ID        int64
-	ContestID int64
-	Name      string
-	Email     string
-	Phone     string
-	Address   string
-	CreatedAt string
+	ID          int64
+	ContestID   int64
+	PosterID    int64  // which poster's link (survey or direct-entry) they entered through; 0 if unknown
+	PosterLabel string // poster.internal_poster_info, for admin display; "" if unknown
+	Name        string
+	Email       string
+	Phone       string
+	Address     string
+	CreatedAt   string
 }
 
 type Answer struct {

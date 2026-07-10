@@ -14,8 +14,8 @@ import (
 )
 
 func NewRouter(cfg config.Config, database *db.DB, logger *slog.Logger) http.Handler {
-	pub := &publich.Handlers{DB: database, Logger: logger}
-	adm := &adminh.Handlers{DB: database, Logger: logger, BaseURL: cfg.BaseURL, QRCacheDir: cfg.QRCacheDir}
+	pub := &publich.Handlers{DB: database, Logger: logger, HashSecret: cfg.HashSecret}
+	adm := &adminh.Handlers{DB: database, Logger: logger, BaseURL: cfg.BaseURL, QRCacheDir: cfg.QRCacheDir, HashSecret: cfg.HashSecret}
 
 	mux := http.NewServeMux()
 
@@ -32,6 +32,14 @@ func NewRouter(cfg config.Config, database *db.DB, logger *slog.Logger) http.Han
 	mux.HandleFunc("GET /p/{posterID}", pub.Scan)
 	submitLimiter := middleware.NewIPRateLimiter(5, time.Hour)
 	mux.Handle("POST /p/{posterID}/submit", submitLimiter.Middleware(http.HandlerFunc(pub.Submit)))
+
+	// Direct-entry (alternate method of entry) — non-guessable per-poster
+	// link that skips the survey. Rate-limited on both GET and POST: GET
+	// because an attacker could otherwise brute-force the 8-hex-char hash
+	// by sheer request volume, POST for the same reason submit is limited.
+	directLimiter := middleware.NewIPRateLimiter(5, time.Hour)
+	mux.Handle("GET /e/{posterID}/{hash}", directLimiter.Middleware(http.HandlerFunc(pub.DirectEntry)))
+	mux.Handle("POST /e/{posterID}/{hash}/submit", directLimiter.Middleware(http.HandlerFunc(pub.DirectEntrySubmit)))
 
 	// Admin/back office — single-operator tool behind HTTP Basic Auth.
 	adminMux := http.NewServeMux()
@@ -53,6 +61,7 @@ func NewRouter(cfg config.Config, database *db.DB, logger *slog.Logger) http.Han
 	adminMux.HandleFunc("POST /admin/contests/{id}/posters", adm.CreatePoster)
 	adminMux.HandleFunc("GET /admin/contests/{id}/contestants.csv", adm.ContestantsCSV)
 	adminMux.HandleFunc("GET /admin/posters/{id}/qrcode.png", adm.PosterQRCode)
+	adminMux.HandleFunc("GET /admin/posters/{id}/poster.pdf", adm.PosterPDF)
 
 	mux.Handle("/admin/", adminh.BasicAuth(cfg.AdminUser, cfg.AdminPassHash)(adminMux))
 

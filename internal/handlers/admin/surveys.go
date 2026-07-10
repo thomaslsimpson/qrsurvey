@@ -15,6 +15,7 @@ type Handlers struct {
 	Logger     *slog.Logger
 	BaseURL    string
 	QRCacheDir string
+	HashSecret string
 }
 
 func (h *Handlers) internalError(w http.ResponseWriter, err error, msg string) {

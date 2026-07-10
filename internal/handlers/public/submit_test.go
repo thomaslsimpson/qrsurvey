@@ -28,7 +28,7 @@ func newTestHandlers(t *testing.T) *Handlers {
 		t.Fatalf("migrate: %v", err)
 	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	return &Handlers{DB: database, Logger: logger}
+	return &Handlers{DB: database, Logger: logger, HashSecret: "test-secret"}
 }
 
 // seed creates a 2-question survey + contest + poster; endDate lets tests

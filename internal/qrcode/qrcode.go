@@ -9,22 +9,25 @@ import (
 	"github.com/skip2/go-qrcode"
 )
 
-// PNGForPoster returns the PNG bytes encoding baseURL+"/p/"+posterID,
-// generating it on first request and caching it to cacheDir thereafter.
-// Posters are created rarely and generation is cheap, so on-demand-with-
-// cache avoids a batch job for what's effectively a handful of images.
-func PNGForPoster(cacheDir string, posterID int64, baseURL string) ([]byte, error) {
+// PNGForPoster returns the PNG bytes encoding baseURL+"/p/"+posterID at the
+// given pixel size (square), generating it on first request and caching it
+// to cacheDir thereafter. Posters are created rarely and generation is
+// cheap, so on-demand-with-cache avoids a batch job for what's effectively
+// a handful of images. The cache key includes size so bumping resolution
+// (or a caller wanting a different size, e.g. for print) can't collide with
+// or silently keep serving a differently-sized cached file.
+func PNGForPoster(cacheDir string, posterID int64, baseURL string, size int) ([]byte, error) {
 	if err := os.MkdirAll(cacheDir, 0o755); err != nil {
 		return nil, fmt.Errorf("create qr cache dir: %w", err)
 	}
 
-	path := filepath.Join(cacheDir, fmt.Sprintf("%d.png", posterID))
+	path := filepath.Join(cacheDir, fmt.Sprintf("%d-%d.png", posterID, size))
 	if b, err := os.ReadFile(path); err == nil {
 		return b, nil
 	}
 
 	url := fmt.Sprintf("%s/p/%d", baseURL, posterID)
-	png, err := qrcode.Encode(url, qrcode.Medium, 512)
+	png, err := qrcode.Encode(url, qrcode.Medium, size)
 	if err != nil {
 		return nil, fmt.Errorf("encode qr code: %w", err)
 	}

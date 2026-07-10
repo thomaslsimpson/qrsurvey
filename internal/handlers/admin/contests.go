@@ -2,14 +2,25 @@ package admin
 
 import (
 	"encoding/csv"
+	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/thomaslsimpson/qrsurvey/internal/db"
+	"github.com/thomaslsimpson/qrsurvey/internal/entryhash"
 	"github.com/thomaslsimpson/qrsurvey/internal/models"
+	"github.com/thomaslsimpson/qrsurvey/internal/posterpdf"
 	"github.com/thomaslsimpson/qrsurvey/internal/qrcode"
 	"github.com/thomaslsimpson/qrsurvey/internal/web"
 )
+
+// posterView adds the computed alternate-method-of-entry link to a poster
+// for display in the admin contest detail page (the hash isn't stored —
+// it's derived on the fly from HashSecret, same as at request time).
+type posterView struct {
+	models.Poster
+	EntryURL string
+}
 
 type contestsPageData struct {
 	Contests []models.Contest
@@ -70,7 +81,7 @@ type contestDetailPageData struct {
 	Contest      models.Contest
 	Survey       models.Survey
 	EndDateInput string
-	Posters      []models.Poster
+	Posters      []posterView
 	Items        []models.SurveyItem
 	ItemCount    int
 	Distribution map[int64]*db.ItemDistribution
@@ -104,6 +115,14 @@ func (h *Handlers) ContestDetail(w http.ResponseWriter, r *http.Request) {
 		h.internalError(w, err, "list posters")
 		return
 	}
+	posterViews := make([]posterView, len(posters))
+	for i, p := range posters {
+		hash := entryhash.Hash(h.HashSecret, p.ID)
+		posterViews[i] = posterView{
+			Poster:   p,
+			EntryURL: fmt.Sprintf("%s/e/%d/%s", h.BaseURL, p.ID, hash),
+		}
+	}
 	dist, err := h.DB.ResultsByContest(r.Context(), id)
 	if err != nil {
 		h.internalError(w, err, "results by contest")
@@ -119,7 +138,7 @@ func (h *Handlers) ContestDetail(w http.ResponseWriter, r *http.Request) {
 		Contest:      contest,
 		Survey:       survey,
 		EndDateInput: contest.EndDate[:10],
-		Posters:      posters,
+		Posters:      posterViews,
 		Items:        items,
 		ItemCount:    len(items),
 		Distribution: dist,
@@ -194,6 +213,10 @@ func (h *Handlers) CreatePoster(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/admin/contests/"+strconv.FormatInt(contestID, 10), http.StatusSeeOther)
 }
 
+// posterQRSize is used for both the standalone PNG endpoint and the PDF
+// poster — large enough to print cleanly on a full sheet of paper.
+const posterQRSize = 1024
+
 func (h *Handlers) PosterQRCode(w http.ResponseWriter, r *http.Request) {
 	posterID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
 	if err != nil {
@@ -204,13 +227,38 @@ func (h *Handlers) PosterQRCode(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
-	png, err := qrcode.PNGForPoster(h.QRCacheDir, posterID, h.BaseURL)
+	png, err := qrcode.PNGForPoster(h.QRCacheDir, posterID, h.BaseURL, posterQRSize)
 	if err != nil {
 		h.internalError(w, err, "generate qr code")
 		return
 	}
 	w.Header().Set("Content-Type", "image/png")
 	w.Write(png)
+}
+
+func (h *Handlers) PosterPDF(w http.ResponseWriter, r *http.Request) {
+	posterID, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	if _, err := h.DB.GetPoster(r.Context(), posterID); err != nil {
+		http.NotFound(w, r)
+		return
+	}
+	png, err := qrcode.PNGForPoster(h.QRCacheDir, posterID, h.BaseURL, posterQRSize)
+	if err != nil {
+		h.internalError(w, err, "generate qr code")
+		return
+	}
+	pdf, err := posterpdf.Generate(png)
+	if err != nil {
+		h.internalError(w, err, "generate poster pdf")
+		return
+	}
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "inline; filename=\"poster-"+strconv.FormatInt(posterID, 10)+".pdf\"")
+	w.Write(pdf)
 }
 
 func (h *Handlers) ContestantsCSV(w http.ResponseWriter, r *http.Request) {
@@ -228,9 +276,9 @@ func (h *Handlers) ContestantsCSV(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/csv")
 	w.Header().Set("Content-Disposition", "attachment; filename=\"contest-"+strconv.FormatInt(id, 10)+"-contestants.csv\"")
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"name", "email", "phone", "address", "entered_at"})
+	cw.Write([]string{"name", "email", "phone", "address", "poster", "entered_at"})
 	for _, c := range contestants {
-		cw.Write([]string{c.Name, c.Email, c.Phone, c.Address, c.CreatedAt})
+		cw.Write([]string{c.Name, c.Email, c.Phone, c.Address, c.PosterLabel, c.CreatedAt})
 	}
 	cw.Flush()
 }

@@ -30,8 +30,8 @@ func (d *DB) SubmitEntry(ctx context.Context, contestID, posterID int64, contest
 	defer tx.Rollback() //nolint:errcheck // no-op if already committed
 
 	res, err := tx.ExecContext(ctx, `
-		INSERT INTO contestant (contest_id, name, email, phone, address) VALUES (?, ?, ?, ?, ?)`,
-		contestID, contestant.Name, nullIfEmpty(contestant.Email), contestant.Phone, nullIfEmpty(contestant.Address))
+		INSERT INTO contestant (contest_id, poster_id, name, email, phone, address) VALUES (?, ?, ?, ?, ?, ?)`,
+		contestID, posterID, contestant.Name, nullIfEmpty(contestant.Email), contestant.Phone, nullIfEmpty(contestant.Address))
 	if err != nil {
 		if isUniqueConstraintErr(err) {
 			return 0, ErrDuplicateEntry
@@ -65,8 +65,11 @@ func (d *DB) SubmitEntry(ctx context.Context, contestID, posterID int64, contest
 
 func (d *DB) ListContestantsByContest(ctx context.Context, contestID int64) ([]models.Contestant, error) {
 	rows, err := d.conn.QueryContext(ctx, `
-		SELECT id, contest_id, name, COALESCE(email, ''), phone, COALESCE(address, ''), created_at
-		FROM contestant WHERE contest_id = ? ORDER BY created_at`, contestID)
+		SELECT c.id, c.contest_id, COALESCE(c.poster_id, 0), COALESCE(p.internal_poster_info, ''),
+			c.name, COALESCE(c.email, ''), c.phone, COALESCE(c.address, ''), c.created_at
+		FROM contestant c
+		LEFT JOIN poster p ON p.id = c.poster_id
+		WHERE c.contest_id = ? ORDER BY c.created_at`, contestID)
 	if err != nil {
 		return nil, fmt.Errorf("list contestants: %w", err)
 	}
@@ -75,7 +78,7 @@ func (d *DB) ListContestantsByContest(ctx context.Context, contestID int64) ([]m
 	var out []models.Contestant
 	for rows.Next() {
 		var c models.Contestant
-		if err := rows.Scan(&c.ID, &c.ContestID, &c.Name, &c.Email, &c.Phone, &c.Address, &c.CreatedAt); err != nil {
+		if err := rows.Scan(&c.ID, &c.ContestID, &c.PosterID, &c.PosterLabel, &c.Name, &c.Email, &c.Phone, &c.Address, &c.CreatedAt); err != nil {
 			return nil, err
 		}
 		out = append(out, c)

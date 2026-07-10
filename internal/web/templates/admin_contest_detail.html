@@ -24,13 +24,15 @@
   <h2>Posters</h2>
   {{if not .Posters}}<p class="muted">No posters yet.</p>{{end}}
   <table>
-    <tr><th>ID</th><th>Label</th><th>Scan link</th><th>QR code</th></tr>
+    <tr><th>ID</th><th>Label</th><th>Scan link</th><th>Alternate entry (no survey)</th><th>QR code</th><th></th></tr>
     {{range .Posters}}
     <tr>
       <td>{{.ID}}</td>
       <td>{{.InternalPosterInfo}}</td>
       <td><a href="{{$.BaseURL}}/p/{{.ID}}">{{$.BaseURL}}/p/{{.ID}}</a></td>
+      <td><a href="{{.EntryURL}}">{{.EntryURL}}</a></td>
       <td><img class="qr-preview" src="/admin/posters/{{.ID}}/qrcode.png" alt="QR code for poster {{.ID}}"></td>
+      <td><a class="button" href="/admin/posters/{{.ID}}/poster.pdf" target="_blank">Download PDF poster</a></td>
     </tr>
     {{end}}
   </table>
@@ -69,9 +71,9 @@
   <h2>Contestants ({{len .Contestants}})</h2>
   <p><a class="button" href="/admin/contests/{{.Contest.ID}}/contestants.csv">Download CSV</a></p>
   <table>
-    <tr><th>Name</th><th>Email</th><th>Phone</th><th>Entered</th></tr>
+    <tr><th>Name</th><th>Email</th><th>Phone</th><th>Poster</th><th>Entered</th></tr>
     {{range .Contestants}}
-    <tr><td>{{.Name}}</td><td>{{.Email}}</td><td>{{.Phone}}</td><td>{{.CreatedAt}}</td></tr>
+    <tr><td>{{.Name}}</td><td>{{.Email}}</td><td>{{.Phone}}</td><td>{{.PosterLabel}}</td><td>{{.CreatedAt}}</td></tr>
     {{end}}
   </table>
 </main>

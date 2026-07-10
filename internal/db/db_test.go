@@ -92,6 +92,42 @@ func TestSubmitEntry_HappyPath(t *testing.T) {
 	}
 }
 
+// TestSubmitEntry_ZeroAnswers covers the direct-entry (AMOE) path: a
+// contestant who skips the survey entirely still gets recorded, with
+// poster_id set so there's a record of which link they used, and zero
+// answer rows.
+func TestSubmitEntry_ZeroAnswers(t *testing.T) {
+	d := newTestDB(t)
+	ctx := context.Background()
+	_, contestID, posterID, _ := seedSurveyWithItems(t, d, 2)
+
+	contestantID, err := d.SubmitEntry(ctx, contestID, posterID,
+		models.Contestant{Name: "Direct Entrant", Phone: "555-0200"}, nil)
+	if err != nil {
+		t.Fatalf("SubmitEntry: %v", err)
+	}
+	if got := countRows(t, d, "answer"); got != 0 {
+		t.Errorf("answer rows = %d, want 0", got)
+	}
+
+	contestants, err := d.ListContestantsByContest(ctx, contestID)
+	if err != nil {
+		t.Fatalf("ListContestantsByContest: %v", err)
+	}
+	var found bool
+	for _, c := range contestants {
+		if c.ID == contestantID {
+			found = true
+			if c.PosterID != posterID {
+				t.Errorf("PosterID = %d, want %d", c.PosterID, posterID)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("contestant %d not found in ListContestantsByContest", contestantID)
+	}
+}
+
 // TestSubmitEntry_Atomicity is the highest-value test in the suite: the
 // product requirement (issue #2) is that a survey submission is all-or-
 // nothing. A bad answer partway through the batch must roll back the

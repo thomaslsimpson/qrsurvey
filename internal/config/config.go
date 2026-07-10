@@ -13,6 +13,7 @@ type Config struct {
 	QRCacheDir    string
 	AdminUser     string
 	AdminPassHash string // bcrypt hash
+	HashSecret    string // HMAC key for the non-guessable direct-entry (AMOE) URLs
 }
 
 func Load() (Config, error) {
@@ -23,9 +24,13 @@ func Load() (Config, error) {
 		QRCacheDir:    getEnv("QR_CACHE_DIR", "data/qrcodes"),
 		AdminUser:     os.Getenv("ADMIN_USER"),
 		AdminPassHash: os.Getenv("ADMIN_PASS_HASH"),
+		HashSecret:    os.Getenv("HASH_SECRET"),
 	}
 	if c.AdminUser == "" || c.AdminPassHash == "" {
 		return c, fmt.Errorf("ADMIN_USER and ADMIN_PASS_HASH must be set")
+	}
+	if c.HashSecret == "" {
+		return c, fmt.Errorf("HASH_SECRET must be set")
 	}
 	return c, nil
 }

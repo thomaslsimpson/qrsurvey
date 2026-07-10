@@ -16,8 +16,9 @@ import (
 )
 
 type Handlers struct {
-	DB     *db.DB
-	Logger *slog.Logger
+	DB         *db.DB
+	Logger     *slog.Logger
+	HashSecret string
 }
 
 // EndDateLayout is the format contest.end_date is stored in: an RFC3339

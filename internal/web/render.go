@@ -49,6 +49,18 @@ func RenderEnded(w io.Writer, businessName string) error {
 	return tmpl.ExecuteTemplate(w, "ended.html", map[string]string{"BusinessName": businessName})
 }
 
+// DirectEntryData is the payload for the alternate-method-of-entry page:
+// contact form only, no survey questions. The page's own inline script
+// derives the submit URL from window.location.pathname, same as the main
+// wizard does, so no path needs to be threaded through here.
+type DirectEntryData struct {
+	BusinessName string
+}
+
+func RenderDirectEntry(w io.Writer, data DirectEntryData) error {
+	return tmpl.ExecuteTemplate(w, "direct_entry.html", data)
+}
+
 func RenderNotReady(w io.Writer) error {
 	return tmpl.ExecuteTemplate(w, "not_ready.html", nil)
 }

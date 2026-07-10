@@ -1,0 +1,95 @@
+{{define "direct_entry.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>{{.BusinessName}} — Enter to Win</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/wizard.css">
+</head>
+<body>
+<div class="app">
+  <div class="bg-texture" aria-hidden="true"></div>
+  <main class="stage">
+    <section class="screen" id="screen-entry">
+      <div class="ticket-hero">
+        <span class="ticket-badge">&#9733; CONTEST TICKET &#9733;</span>
+        <div class="ticket-title">WIN BIG</div>
+        <div class="ticket-divider"></div>
+        <div class="ticket-sub">No survey needed — enter below</div>
+      </div>
+      <div class="kicker" style="margin-top:24px">{{.BusinessName}}</div>
+      <h2 class="prompt">Enter to win!</h2>
+      <p class="subtext-sm">Just your info — that's it, you're entered.</p>
+      <div class="form-fields">
+        <input class="text-input" id="f-name" type="text" placeholder="Full name" autocomplete="name" required>
+        <input class="text-input" id="f-email" type="email" placeholder="Email address" autocomplete="email">
+        <input class="text-input" id="f-phone" type="tel" placeholder="Mobile number" autocomplete="tel" required>
+        <input class="hp-field" id="f-hp" name="company" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </div>
+      <div class="submit-error" id="submit-error" hidden></div>
+      <div class="spacer"></div>
+      <button class="cta-btn" id="enter-btn" type="button">ENTER THE DRAW</button>
+    </section>
+
+    <section class="screen screen-thanks" id="screen-thanks" hidden>
+      <div class="thanks-badge"><span>&#10003;</span></div>
+      <h1 class="headline">You're entered!</h1>
+      <p class="subtext">Thanks for playing. Winners drawn at month's end — fingers crossed it's you!</p>
+    </section>
+  </main>
+</div>
+<script>
+(function () {
+  'use strict';
+  var entry = document.getElementById('screen-entry');
+  var thanks = document.getElementById('screen-thanks');
+  var name = document.getElementById('f-name');
+  var email = document.getElementById('f-email');
+  var phone = document.getElementById('f-phone');
+  var hp = document.getElementById('f-hp');
+  var err = document.getElementById('submit-error');
+  var btn = document.getElementById('enter-btn');
+
+  function showError(msg) {
+    err.textContent = msg;
+    err.hidden = false;
+  }
+
+  btn.addEventListener('click', function () {
+    err.hidden = true;
+    var n = name.value.trim();
+    var p = phone.value.trim();
+    if (!n || !p) {
+      showError('Please fill in your name and mobile number.');
+      return;
+    }
+
+    var payload = { name: n, email: email.value.trim(), phone: p, honeypot: hp.value };
+    btn.disabled = true;
+    fetch(window.location.pathname.replace(/\/$/, '') + '/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      if (res.ok) {
+        entry.hidden = true;
+        thanks.hidden = false;
+        return;
+      }
+      return res.json().catch(function () { return {}; }).then(function (body) {
+        showError((body && body.error) || 'Something went wrong — please try again.');
+      });
+    }).catch(function () {
+      showError('Network error — please check your connection and try again.');
+    }).finally(function () {
+      btn.disabled = false;
+    });
+  });
+})();
+</script>
+</body>
+</html>
+{{end}}
