@@ -1,0 +1,80 @@
+{{define "admin_contest_detail.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contest #{{.Contest.ID}} — Admin</title>
+{{template "admin_nav" .}}
+</head>
+<body>
+<main class="admin-main">
+  <h1>{{.Survey.Description}} — Contest #{{.Contest.ID}}</h1>
+
+  <div class="card">
+    <h2 style="margin-top:0">Details</h2>
+    <form method="post" action="/admin/contests/{{.Contest.ID}}">
+      <label>Ends on</label>
+      <input type="date" name="end_date" value="{{.EndDateInput}}" required>
+      <label>Prize</label>
+      <input type="text" name="prize" value="{{.Contest.Prize}}" required>
+      <br><br>
+      <button class="button" type="submit">Save</button>
+    </form>
+  </div>
+
+  <h2>Posters</h2>
+  {{if not .Posters}}<p class="muted">No posters yet.</p>{{end}}
+  <table>
+    <tr><th>ID</th><th>Label</th><th>Scan link</th><th>QR code</th></tr>
+    {{range .Posters}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.InternalPosterInfo}}</td>
+      <td><a href="{{$.BaseURL}}/p/{{.ID}}">{{$.BaseURL}}/p/{{.ID}}</a></td>
+      <td><img class="qr-preview" src="/admin/posters/{{.ID}}/qrcode.png" alt="QR code for poster {{.ID}}"></td>
+    </tr>
+    {{end}}
+  </table>
+
+  <div class="card">
+    <h2 style="margin-top:0">Add a poster</h2>
+    {{if eq .ItemCount 0}}
+    <p class="muted">This survey has no questions yet — add at least one before creating a poster.</p>
+    {{else}}
+    <form method="post" action="/admin/contests/{{.Contest.ID}}/posters">
+      <label>Internal label (e.g. "North Entrance")</label>
+      <input type="text" name="internal_poster_info" required>
+      <br><br>
+      <button class="button" type="submit">Create poster</button>
+    </form>
+    {{end}}
+  </div>
+
+  <h2>Results</h2>
+  {{if not .Items}}<p class="muted">No questions on this survey.</p>{{end}}
+  {{range .Items}}
+  {{$dist := index $.Distribution .ID}}
+  <div class="card">
+    <strong>{{.Question}}</strong>
+    {{$resp := .Responses}}
+    {{range $i, $label := $resp}}
+    <div class="bar-row">
+      <span style="width:110px">{{$label}}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:{{if $dist}}{{$dist.Pct $i}}{{else}}0{{end}}%"></div></div>
+      <span style="width:70px">{{if $dist}}{{index $dist.Counts $i}}{{else}}0{{end}} ({{if $dist}}{{$dist.Pct $i}}{{else}}0{{end}}%)</span>
+    </div>
+    {{end}}
+  </div>
+  {{end}}
+
+  <h2>Contestants ({{len .Contestants}})</h2>
+  <p><a class="button" href="/admin/contests/{{.Contest.ID}}/contestants.csv">Download CSV</a></p>
+  <table>
+    <tr><th>Name</th><th>Email</th><th>Phone</th><th>Entered</th></tr>
+    {{range .Contestants}}
+    <tr><td>{{.Name}}</td><td>{{.Email}}</td><td>{{.Phone}}</td><td>{{.CreatedAt}}</td></tr>
+    {{end}}
+  </table>
+</main>
+</body>
+</html>
+{{end}}

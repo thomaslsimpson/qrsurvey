@@ -1,0 +1,47 @@
+{{define "admin_contests.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contests — Admin</title>
+{{template "admin_nav" .}}
+</head>
+<body>
+<main class="admin-main">
+  <h1>Contests</h1>
+
+  <table>
+    <tr><th>ID</th><th>Survey</th><th>Ends</th><th>Prize</th><th></th></tr>
+    {{range .Contests}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.SurveyID}}</td>
+      <td>{{.EndDate}}</td>
+      <td>{{.Prize}}</td>
+      <td><a href="/admin/contests/{{.ID}}">manage</a></td>
+    </tr>
+    {{end}}
+  </table>
+
+  <div class="card">
+    <h2 style="margin-top:0">New contest</h2>
+    {{if not .Surveys}}
+    <p class="muted">Create a survey first.</p>
+    {{else}}
+    <form method="post" action="/admin/contests">
+      <label>Survey</label>
+      <select name="survey_id" required>
+        {{range .Surveys}}<option value="{{.ID}}">{{.Description}} (#{{.ID}})</option>{{end}}
+      </select>
+      <label>Ends on</label>
+      <input type="date" name="end_date" required>
+      <label>Prize</label>
+      <input type="text" name="prize" required>
+      <br><br>
+      <button class="button" type="submit">Create contest</button>
+    </form>
+    {{end}}
+  </div>
+</main>
+</body>
+</html>
+{{end}}

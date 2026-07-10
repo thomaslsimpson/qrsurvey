@@ -1,0 +1,63 @@
+{{define "admin_survey_detail.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{.Survey.Description}} — Admin</title>
+{{template "admin_nav" .}}
+</head>
+<body>
+<main class="admin-main">
+  <h1>{{.Survey.Description}}</h1>
+
+  <div class="card">
+    <h2 style="margin-top:0">Description</h2>
+    <form method="post" action="/admin/surveys/{{.Survey.ID}}">
+      <input type="text" name="description" value="{{.Survey.Description}}" required>
+      <br><br>
+      <button class="button" type="submit">Save</button>
+    </form>
+  </div>
+
+  <h2>Questions</h2>
+  {{if not .Items}}<p class="muted">No questions yet — a contest using this survey can't be entered until at least one is added.</p>{{end}}
+  <table>
+    <tr><th>#</th><th>Question</th><th>Responses (worst → best)</th><th></th></tr>
+    {{range .Items}}
+    <tr>
+      <td>{{.SortOrder}}</td>
+      <td>{{.Question}}</td>
+      <td>{{.Response1}} / {{.Response2}} / {{.Response3}} / {{.Response4}} / {{.Response5}}</td>
+      <td>
+        <form class="inline" method="post" action="/admin/surveys/{{$.Survey.ID}}/items/{{.ID}}/delete" onsubmit="return confirm('Delete this question?')">
+          <button class="button" type="submit" style="background:#9E2A5A">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </table>
+
+  <div class="card">
+    <h2 style="margin-top:0">Add a question</h2>
+    <form method="post" action="/admin/surveys/{{.Survey.ID}}/items">
+      <label>Question</label>
+      <input type="text" name="question" required>
+      <label>Order (lower shown first)</label>
+      <input type="number" name="sort_order" value="0">
+      <label>Response 1 (worst)</label>
+      <input type="text" name="response_1" required>
+      <label>Response 2</label>
+      <input type="text" name="response_2" required>
+      <label>Response 3</label>
+      <input type="text" name="response_3" required>
+      <label>Response 4</label>
+      <input type="text" name="response_4" required>
+      <label>Response 5 (best)</label>
+      <input type="text" name="response_5" required>
+      <br><br>
+      <button class="button" type="submit">Add question</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>
+{{end}}

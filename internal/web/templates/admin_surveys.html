@@ -1,0 +1,37 @@
+{{define "admin_surveys.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Surveys — Admin</title>
+{{template "admin_nav" .}}
+</head>
+<body>
+<main class="admin-main">
+  <h1>Surveys</h1>
+  <p class="muted">A survey's description is shown to customers as the business/location name (e.g. "Uptown Mall").</p>
+
+  <table>
+    <tr><th>ID</th><th>Description</th><th>Items</th><th></th></tr>
+    {{range .Surveys}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.Description}}</td>
+      <td><a href="/admin/surveys/{{.ID}}">manage questions</a></td>
+      <td></td>
+    </tr>
+    {{end}}
+  </table>
+
+  <div class="card">
+    <h2>New survey</h2>
+    <form method="post" action="/admin/surveys">
+      <label>Description (shown to customers as the business name)</label>
+      <input type="text" name="description" required>
+      <br><br>
+      <button class="button" type="submit">Create survey</button>
+    </form>
+  </div>
+</main>
+</body>
+</html>
+{{end}}

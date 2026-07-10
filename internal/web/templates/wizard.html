@@ -1,0 +1,80 @@
+{{define "wizard.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>{{.BusinessName}} — Quick Survey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/wizard.css">
+</head>
+<body>
+<div class="app" id="app">
+  <div class="bg-texture" aria-hidden="true"></div>
+
+  <header class="wizard-header" id="wizard-header" hidden>
+    <button class="back-btn" id="back-btn" type="button" aria-label="Go back">&lsaquo;</button>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  </header>
+  <div class="countdown" id="countdown" hidden></div>
+
+  <main class="stage" id="stage">
+    <section class="screen screen-welcome" id="screen-welcome">
+      <div class="ticket-hero">
+        <span class="ticket-badge">&#9733; CONTEST TICKET &#9733;</span>
+        <div class="ticket-title">WIN BIG</div>
+        <div class="ticket-divider"></div>
+        <div class="ticket-sub">Answer {{.ItemCount}} questions to claim it</div>
+      </div>
+      <h1 class="headline">How was your visit to {{.BusinessName}}?</h1>
+      <p class="subtext">Tap through {{.ItemCount}} fun questions and your ticket's in the draw. Let's win something.</p>
+      <div class="spacer"></div>
+      <button class="cta-btn" id="start-btn" type="button">LET'S PLAY &rarr;</button>
+    </section>
+
+    <section class="screen screen-question" id="screen-question" hidden>
+      <div class="kicker" id="q-kicker"></div>
+      <h2 class="prompt" id="q-prompt"></h2>
+      <div class="current-label" id="q-current-label"></div>
+      <div class="star-row" id="q-star-row"></div>
+      <div class="slider-track" id="q-slider-track">
+        <div class="slider-base"></div>
+        <div class="slider-fill" id="q-slider-fill"></div>
+        <div class="slider-dots" id="q-slider-dots"></div>
+        <div class="slider-thumb" id="q-slider-thumb" hidden></div>
+      </div>
+      <div class="end-labels">
+        <span id="q-worst"></span><span id="q-best"></span>
+      </div>
+      <div class="spacer"></div>
+      <button class="cta-btn next-btn" id="next-btn" type="button" disabled>Next &rarr;</button>
+    </section>
+
+    <section class="screen screen-contest" id="screen-contest" hidden>
+      <div class="kicker">Last step</div>
+      <h2 class="prompt">Claim your ticket!</h2>
+      <p class="subtext-sm">We'll only buzz you if you win.</p>
+      <div class="form-fields">
+        <input class="text-input" id="f-name" type="text" placeholder="Full name" autocomplete="name" required>
+        <input class="text-input" id="f-email" type="email" placeholder="Email address" autocomplete="email">
+        <input class="text-input" id="f-phone" type="tel" placeholder="Mobile number" autocomplete="tel" required>
+        <input class="hp-field" id="f-hp" name="company" type="text" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </div>
+      <div class="submit-error" id="submit-error" hidden></div>
+      <div class="spacer"></div>
+      <button class="cta-btn" id="enter-btn" type="button">ENTER THE DRAW</button>
+    </section>
+
+    <section class="screen screen-thanks" id="screen-thanks" hidden>
+      <div class="thanks-badge"><span>&#10003;</span></div>
+      <h1 class="headline">You're in the draw!</h1>
+      <p class="subtext" id="thanks-message">Thanks for playing. Winners drawn at month's end — fingers crossed it's you!</p>
+    </section>
+  </main>
+</div>
+<script type="application/json" id="survey-data">{{.DataJSON}}</script>
+<script src="/static/wizard.js"></script>
+</body>
+</html>
+{{end}}

@@ -1,0 +1,16 @@
+[Unit]
+Description=qrsurvey app server
+After=network.target
+
+[Service]
+ExecStart=/opt/qrsurvey/qrsurvey
+WorkingDirectory=/opt/qrsurvey
+EnvironmentFile=/etc/qrsurvey.env
+Restart=on-failure
+User=qrsurvey
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/opt/qrsurvey/data
+
+[Install]
+WantedBy=multi-user.target

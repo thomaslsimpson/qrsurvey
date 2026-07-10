@@ -1,0 +1,11 @@
+### Reverse-proxy config for the qrsurvey Go binary.
+# Caddy terminates TLS (automatic HTTPS via Let's Encrypt) and forwards
+# everything to the Go server, which only ever listens on localhost.
+#
+# Replace survey.example.com with the real domain before deploying, then
+# `caddy reload` (or restart the caddy systemd unit).
+
+survey.ratefollowup.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:8080
+}

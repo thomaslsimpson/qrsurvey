@@ -1,0 +1,23 @@
+{{define "ended.html"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contest ended</title>
+<link href="https://fonts.googleapis.com/css2?family=Righteous&family=Nunito:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/wizard.css">
+</head>
+<body>
+<div class="app">
+  <div class="bg-texture" aria-hidden="true"></div>
+  <main class="stage">
+    <section class="screen screen-thanks" style="display:flex">
+      <div class="thanks-badge" style="background:rgba(255,255,255,.16)"><span>&#9203;</span></div>
+      <h1 class="headline">This contest has ended</h1>
+      <p class="subtext">Thanks for your interest in {{.BusinessName}} — keep an eye out for the next one!</p>
+    </section>
+  </main>
+</div>
+</body>
+</html>
+{{end}}

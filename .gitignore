@@ -1,0 +1,8 @@
+/qrsurvey
+/hashpw
+/data/
+*.db
+*.db-wal
+*.db-shm
+/.env
+/*.local.env
